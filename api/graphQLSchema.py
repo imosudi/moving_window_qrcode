@@ -6,6 +6,11 @@ from .graphQLmutation import *
 #from flask_graphql import GraphQLView
 
 
+# noinspection PyTypeChecker
+graphql_query = graphene.Schema(query=Query)
+schema_mutation = graphene.Schema(query=Query, mutation=Mutation)
+
+
 
 # /graphql-query
 # /graphql-query

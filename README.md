@@ -29,7 +29,7 @@ DB_NAME="graphqldb"
 
 
 # Create Python3 virtual environment    
- python3 -m venv venv
+ python3.9 -m venv venv
 
 # Start virtual environment     
  source venv/bin/activate   

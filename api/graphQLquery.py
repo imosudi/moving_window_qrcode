@@ -20,6 +20,11 @@ class AttendanceObject(graphene.ObjectType):
         model = Attendance
         interfaces = (graphene.relay.Node,)
 
+class QRCodePayload(graphene.ObjectType):
+    qr_code_payload = graphene.String()
+    expiry_time = graphene.Int()
+
+
 # ===========================================
 # GRAPHQL QUERY
 # ===========================================

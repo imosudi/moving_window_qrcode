@@ -15,19 +15,14 @@ import config
 from .dbconnect import *
 
 from flask_migrate import Migrate
+from flask_cors import CORS
+
 
 app = Flask(__name__)
 
 
 
 #print(dbhost, dbname, dbuser, pw)
-
-"""
-basedir = os.path.abspath(os.path.dirname(__file__))
-# Database Configs [Check it base on other Database Configuration]
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'database.sqlite')
-app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True"""
 
 # Database configuration for mysql
 app.config['SECRET_KEY'] = 'verydifficult-cashubposweb-secret-key-goes-here'
@@ -40,7 +35,7 @@ db = SQLAlchemy(app)
 #db.init_app(app)
 
 migrate = Migrate(app, db)
-
+CORS(app)
 
 from .models import *
 from api.graphQLSchema import *

@@ -10,7 +10,7 @@ from app import app, db
 # CONFIGURATION
 # ===========================================
 SECRET_KEY = os.getenv("SECRET_KEY", "supersecretkey")
-TIME_WINDOW_DURATION = 300  # 5 minutes
+TIME_WINDOW_DURATION = 120  # 5 minutes
 NONCE_LENGTH = 16  # Secure nonce length
 
 # ===========================================
@@ -46,3 +46,91 @@ def log_event(event_type, details, optional_enc_payload=None, optional_timestamp
         "encrypted_payload": optional_enc_payload,
         "timestamp": optional_timestamp or get_current_server_time()
     })
+
+
+# ===========================================
+# DIRECT GRAPHENE INTEGRATION (replacing Flask-GraphQL)
+# ===========================================
+
+# Helper function to process GraphQL requests
+def process_graphql_request(schema):
+    # Handle GET requests (for GraphiQL interface)
+    if request.method == 'GET':
+        # Simple GraphiQL interface
+        graphiql_html = '''
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>GraphiQL</title>
+            <link href="https://cdnjs.cloudflare.com/ajax/libs/graphiql/1.0.6/graphiql.min.css" rel="stylesheet" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/react/16.13.1/umd/react.production.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/16.13.1/umd/react-dom.production.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/graphiql/1.0.6/graphiql.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/3.0.0/fetch.min.js"></script>
+            <style>
+                body {
+                    height: 100%;
+                    margin: 0;
+                    overflow: hidden;
+                }
+                #graphiql {
+                    height: 100vh;
+                }
+            </style>
+        </head>
+        <body>
+            <div id="graphiql">Loading...</div>
+            <script>
+                function fetchGQL(params) {
+                    return fetch(window.location.href, {
+                        method: 'post',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(params),
+                        credentials: 'include',
+                    }).then(function (response) {
+                        return response.text();
+                    }).then(function (responseBody) {
+                        try {
+                            return JSON.parse(responseBody);
+                        } catch (e) {
+                            return responseBody;
+                        }
+                    });
+                }
+                
+                ReactDOM.render(
+                    React.createElement(GraphiQL, {fetcher: fetchGQL}),
+                    document.getElementById('graphiql')
+                );
+            </script>
+        </body>
+        </html>
+        '''
+        return graphiql_html
+
+    # Handle POST requests
+    data = request.get_json()
+    
+    if not data:
+        return jsonify({"errors": [{"message": "No GraphQL query provided"}]}), 400
+    
+    # Execute the GraphQL query
+    result = schema.execute(
+        data.get('query'),
+        variable_values=data.get('variables'),
+        operation_name=data.get('operationName')
+    )
+    
+    # Format the response
+    response = {}
+    if result.errors:
+        response["errors"] = [str(error) for error in result.errors]
+    if result.data:
+        response["data"] = result.data
+    
+    return jsonify(response)
+
+
