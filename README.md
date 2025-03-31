@@ -1,4 +1,4 @@
-# graphql
+# Moving Window QR Code graphql
 
 # Clone repo    
  git clone https://github.com/imosudi/moving_window_qrcode.git   
