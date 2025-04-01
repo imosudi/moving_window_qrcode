@@ -4,3 +4,12 @@ body {
     padding: 20px;
     text-align: center;
 }
+.scanner-container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.error {
+    color: red;
+    font-weight: bold;
+}
