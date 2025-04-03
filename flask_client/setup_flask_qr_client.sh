@@ -30,7 +30,7 @@ import datetime
 
 app = Flask(__name__)
 
-GRAPHQL_ENDPOINT = "http://192.168.167.192:8091/graphql_mutation"
+GRAPHQL_ENDPOINT = "http://127.0.0.1:8091/graphql_mutation"
 
 # Custom filter to convert Unix timestamp to HH:MM:SS
 def timestamp_to_time(value):

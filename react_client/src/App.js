@@ -1,3 +1,5 @@
+
+
 import React, { useState } from "react";
 import InstructorPage from "./pages/InstructorPage";
 import StudentPage from "./pages/StudentPage";
@@ -8,8 +10,13 @@ function App() {
     return (
         <div className="App">
             <nav>
-                <button onClick={() => setRole("instructor")}>Instructor</button>
-                <button onClick={() => setRole("student")}>Student</button>
+            <button onClick={() => { console.log("Instructor clicked"); setRole("instructor"); }}>
+                Instructor
+            </button>
+            <button onClick={() => { console.log("Student clicked"); setRole("student"); }}>
+                Student
+            </button>
+
             </nav>
             {role === "instructor" ? <InstructorPage /> : <StudentPage />}
         </div>
@@ -17,3 +24,4 @@ function App() {
 }
 
 export default App;
+

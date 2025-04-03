@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import "./QRCodeScanner.css";
@@ -23,7 +24,7 @@ const QRCodeScanner = ({ studentId }) => {
 
     const submitAttendance = async (scannedPayload) => {
         try {
-            const response = await fetch("http://192.168.167.192:8091/graphql_mutation", {
+            const response = await fetch("http://127.0.0.1:8091/graphql_mutation", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -54,3 +55,4 @@ const QRCodeScanner = ({ studentId }) => {
 };
 
 export default QRCodeScanner;
+

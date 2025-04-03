@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Instructor - Generate QR Code{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Instructor QR Code Generator</h2>
+    <p>Share this QR code with your students for attendance.</p>
+    
+    <div id="qr-container">
+        <p>Loading QR Code...</p>
+    </div>
+    
+    <p id="expiry-time"></p> <!-- Ensure this element exists -->
+
+    <button class="btn" onclick="fetchQRCode('INS123', 'SEN312')">Refresh QR Code</button>
+</div>
+{% endblock %}

@@ -1,11 +1,23 @@
 
-from flask import Flask, render_template, jsonify
-import requests
-import datetime
+from flask import Flask, render_template, jsonify, request
+import requests, datetime, qrcode
+import io
+import base64
+import time
+from flask_cors import CORS  # Import CORS
+
 
 app = Flask(__name__)
 
-GRAPHQL_ENDPOINT = "http://192.168.167.192:8091/graphql_mutation"
+CORS(app)  # Enable CORS globally
+
+
+# Mock Database (In-memory storage for simplicity)
+instructor_qr_codes = {}
+
+# GraphQL Endpoint (Replace with your actual API URL)
+GRAPHQL_API_URL = "http://192.168.167.192:8091/graphql_mutation"
+GRAPHQL_ENDPOINT = "http://127.0.0.1:8091/graphql_mutation"
 
 
 # Custom filter to convert Unix timestamp to HH:MM:SS
@@ -45,6 +57,7 @@ def fetch_qr_code():
 
     return None
 
+
 @app.route("/")
 def index():
     qr_info = fetch_qr_code()
@@ -60,6 +73,58 @@ def index():
 def get_qr_code():
     qr_info = fetch_qr_code()
     return jsonify(qr_info if qr_info else {"error": "Failed to fetch QR Code"})
+
+
+@app.route('/home')
+def home():
+    return render_template('home.html')
+
+@app.route('/instructor')
+def instructor_page():
+    return render_template('instructor.html')
+
+@app.route('/student')
+def student_page():
+    return render_template('student.html')
+@app.route('/generate_qr', methods=['POST'])
+def generate_qr():
+    data = request.json
+    instructor_id = data.get("instructor_id")
+    course_code = data.get("course_code")
+    expiry_time = int(time.time()) + 60  # QR Code valid for 60 seconds
+    
+    qr_payload = f"{instructor_id}:{course_code}:{expiry_time}"
+    instructor_qr_codes[instructor_id] = {'qr_code': qr_payload, 'expiry': expiry_time}
+    
+    qr = qrcode.make(qr_payload)
+    buf = io.BytesIO()
+    qr.save(buf, format="PNG")
+    qr_base64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+    
+    return jsonify({"qr_code": qr_base64, "expiry": expiry_time})
+
+@app.route('/submit_attendance', methods=['POST'])
+def submit_attendance():
+    data = request.json
+    scanned_payload = data.get("scanned_payload")
+    student_id = data.get("student_id")
+    
+    try:
+        response = requests.post(GRAPHQL_API_URL, json={
+            "query": f"""
+            mutation {{
+                submitAttendance(encrypted_payload: "{scanned_payload}", student_id: "{student_id}") {{
+                    status
+                    error_message
+                }}
+            }}
+            """
+        })
+        result = response.json()
+        return jsonify(result.get("data", {}).get("submitAttendance", {}))
+    except Exception as e:
+        return jsonify({"status": "ERROR", "error_message": str(e)})
+
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5500)

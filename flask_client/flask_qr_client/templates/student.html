@@ -1,0 +1,15 @@
+
+{% extends "base.html" %}
+
+{% block title %}Student - Scan QR Code{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Scan QR Code for Attendance</h2>
+    <button id="start-scanner" class="btn">Start Scanner</button>
+    <div id="qr-reader" style="width: 300px; height: 300px; margin-top: 20px;"></div>
+    <p id="scan-result"></p> <!-- Display scan result -->
+</div>
+{% endblock %}
+
+

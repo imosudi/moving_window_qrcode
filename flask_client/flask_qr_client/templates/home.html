@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Home - QR Attendance System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Welcome to the QR Attendance System</h2>
+    <p>Select your role to continue:</p>
+    <div class="role-buttons">
+        <a href="{{ url_for('instructor_page') }}" class="btn">Instructor</a>
+        <a href="{{ url_for('student_page') }}" class="btn">Student</a>
+    </div>
+</div>
+{% endblock %}
