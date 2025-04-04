@@ -20,8 +20,46 @@ class AttendanceObject(graphene.ObjectType):
         model = Attendance
         interfaces = (graphene.relay.Node,)
 
+
+
+
+
+class MessageField(graphene.ObjectType):
+    instructor_id       = graphene.String()
+    course_code         = graphene.String()
+    course_level        = graphene.String()
+    lecture_start       = graphene.String()
+    lecture_end         = graphene.String()
+    window_start        = graphene.String()
+    nonce               = graphene.String()
+
+    def resolve_message(root, info):
+        return '{}'.format(
+                            root.instructor_id,
+                              root.course_code,
+                                root.course_level,
+                                  root.lecture_start,
+                                    root.lecture_end,
+                                      root.window_start,
+                                        root.nonce
+                                )
+class AuthInfoField(graphene.ObjectType):
+    message         = graphene.String()
+
+    def resolve_authinfo(root, info):
+        return '{}'.format(root.message)
+    
+class ProtectedUnion(graphene.Union):
+    class Meta:
+        types = (MessageField, AuthInfoField)# StatusField, AuthInfoField)
+
+    @classmethod
+    def resolve_type(cls, instance, info):
+        return type(instance)
+
 class QRCodePayload(graphene.ObjectType):
     qr_code_payload = graphene.String()
+    payload =  graphene.Field(ProtectedUnion)#
     expiry_time = graphene.Int()
 
 

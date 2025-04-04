@@ -33,6 +33,17 @@ def fetch_qr_code():
                 generateQrCode(instructorId: "INS123", courseCode: "SEN312") {
                     qrCodePayload
                     expiryTime
+                    payload{
+                        ... on MessageField{
+                            instructorId
+                            courseCode
+                            courseLevel
+                            lectureStart
+                            lectureEnd
+                            windowStart
+                            nonce
+                        }
+                    }
                 }
             }
         '''
@@ -45,11 +56,13 @@ def fetch_qr_code():
         if "data" in data and "generateQrCode" in data["data"]:
             qr_data = data["data"]["generateQrCode"]
             #qr_data["expiryTime"] = timestamp_to_time(qr_data["expiryTime"]),
+            print("qr_data: ", qr_data); #time.sleep(300)
             return {
                 "qrCodePayload": qr_data["qrCodePayload"],
-                "expiryTime": qr_data["expiryTime"],  # Already formatted
-                "instructorId": "INS123",
-                "courseCode": "SEN312"
+                "expiryTime": qr_data["expiryTime"],  
+                "payload": qr_data["payload"],
+                "instructorId": qr_data["payload"]["instructorId"], #"INS123",
+                "courseCode": qr_data["payload"]["courseCode"], #"SEN312"
             }
 
     except requests.RequestException as e:
@@ -65,6 +78,7 @@ def index():
         return render_template("index.html", 
                 qr_code_payload=qr_info["qrCodePayload"], 
                expiry_time=qr_info["expiryTime"],
+               payload=qr_info["payload"],
                 instructor_id=qr_info["instructorId"],
                 course_code=qr_info["courseCode"])
     return "Error fetching QR code", 500
@@ -113,7 +127,7 @@ def submit_attendance():
         response = requests.post(GRAPHQL_API_URL, json={
             "query": f"""
             mutation {{
-                submitAttendance(encrypted_payload: "{scanned_payload}", student_id: "{student_id}") {{
+                validateAttendance(encrypted_payload: "{scanned_payload}", student_id: "{student_id}") {{
                     status
                     error_message
                 }}
@@ -121,7 +135,7 @@ def submit_attendance():
             """
         })
         result = response.json()
-        return jsonify(result.get("data", {}).get("submitAttendance", {}))
+        return jsonify(result.get("data", {}).get("validateAttendance", {}))
     except Exception as e:
         return jsonify({"status": "ERROR", "error_message": str(e)})
 

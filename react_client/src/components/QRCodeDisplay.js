@@ -16,6 +16,17 @@ function QRCodeDisplay({ instructorId, courseCode }) {
               generateQrCode(instructorId: "${instructorId}", courseCode: "${courseCode}") {
                 qrCodePayload
                 expiryTime
+                payload{
+                  ... on MessageField{
+                      instructorId
+                      courseCode
+                      courseLevel
+                      lectureStart
+                      lectureEnd
+                      windowStart
+                      nonce
+                  }
+                }
               }
             }
           `,

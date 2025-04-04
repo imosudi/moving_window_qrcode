@@ -11,6 +11,7 @@ from app import app, db
 # ===========================================
 SECRET_KEY = os.getenv("SECRET_KEY", "supersecretkey")
 TIME_WINDOW_DURATION = 120  # 5 minutes
+CLOCK_TOLERANCE = 30  # Balanced approach: 30 seconds tolerance
 NONCE_LENGTH = 16  # Secure nonce length
 
 # ===========================================
@@ -25,6 +26,54 @@ def generate_random_nonce():
 def hmac_sha256(payload, secret_key):
     json_payload = json.dumps(payload, sort_keys=True).encode()
     return hmac.new(secret_key.encode(), json_payload, hashlib.sha256).hexdigest()
+
+def decrypt_hmac(encrypted_payload, original_payload, secret_key=SECRET_KEY):
+    try:
+        # Recompute the HMAC using the original payload
+        computed_hmac = hmac_sha256(original_payload, secret_key)
+
+        # Verify HMAC to ensure integrity
+        if not hmac.compare_digest(computed_hmac, encrypted_payload):
+            raise ValueError("HMAC verification failed. Payload might be tampered with.")
+
+        return original_payload  # Return the original payload if verification is successful
+
+    except Exception as e:
+        print(f"Decryption error: {e}")
+        return None  # Return None if verification fails
+
+def validate_attendance(encrypted_payload, student_id):
+    # 1. Assume student authentication is already verified by middleware.
+
+    # 2. Decrypt or verify the encrypted payload.
+    payload = decrypt_hmac(encrypted_payload, SECRET_KEY)
+    if payload is None:
+        return {"status": "ERROR", "message": "Invalid or tampered QR code."}
+
+    # 3. Check that the QR code is still within the valid moving window.
+    t_current = get_current_server_time()
+    if t_current < (payload["window_start"] - CLOCK_TOLERANCE) or \
+       t_current > (payload["window_start"] + TIME_WINDOW_DURATION + CLOCK_TOLERANCE):
+        return {"status": "ERROR", "message": "QR code expired."}
+
+    # 4. Prevent replay attacks by ensuring the nonce hasn't been used.
+    if is_nonce_used(payload["nonce"]):
+        return {"status": "ERROR", "message": "This QR code has already been used."}
+
+    # 5. Mark the nonce as used to block any replay.
+    mark_nonce_as_used(payload["nonce"])
+
+    # 6. Record the attendance in the system.
+    record_attendance(student_id, t_current, payload)
+
+    # 7. Log the validation event for future auditing.
+    log_event("Attendance Validation", {
+        "student_id": student_id,
+        "payload": payload,
+        "timestamp": t_current
+    })
+
+    return {"status": "SUCCESS", "message": "Attendance recorded."}
 
 def is_nonce_used(nonce):
     return db.session.query(Nonce).filter_by(nonce=nonce).first() is not None

@@ -7,7 +7,7 @@
         <div class="card shadow p-4 text-center">
             <h4 class="mb-3 text-primary">QR Code for <span id="courseCode">{{ course_code }}</span></h4>
             <p class="text-secondary">Instructor ID: <strong id="instructorId">{{ instructor_id }}</strong></p>
-
+            <p><strong>Payload:</strong> <span  class="text-monospace">{{ payload }}</span></p>
             <p><strong>QR Code Payload:</strong> <span id="qrPayload" class="text-monospace">{{ qr_code_payload }}</span></p>
 
             <p class="text-danger fw-bold">Expires at: <span id="expiryTime" data-timestamp="{{ expiry_time }}">{{ expiry_time }}</span></p>

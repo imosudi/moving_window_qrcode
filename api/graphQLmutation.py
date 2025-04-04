@@ -1,3 +1,5 @@
+
+
 from.graphQLquery import *
 
 # ===========================================
@@ -35,7 +37,7 @@ class GenerateQRCode(graphene.Mutation):
             "nonce": nonce
         }
 
-        enc_payload = hmac_sha256(payload, SECRET_KEY)
+        enc_payload = hmac_sha256(payload, SECRET_KEY) + " | " + str(payload)
 
         # Mark nonce as used
         mark_nonce_as_used(nonce)
@@ -46,9 +48,34 @@ class GenerateQRCode(graphene.Mutation):
         expiry_time=window_start + TIME_WINDOW_DURATION
         print("expiry_time: ", expiry_time, "window_start: ", window_start, "TIME_WINDOW_DURATION: ", TIME_WINDOW_DURATION)
         
-        return QRCodePayload(qr_code_payload=enc_payload, expiry_time=expiry_time)
+        return QRCodePayload(qr_code_payload=enc_payload,
+                              payload=MessageField(
+                                    instructor_id = course.instructor_id,
+                                    course_code = course.course_code,
+                                    course_level = course.course_level,
+                                    lecture_start = course.lecture_start.isoformat(),
+                                    lecture_end = course.lecture_end.isoformat(),
+                                    window_start = window_start,
+                                    nonce = nonce
+                              ),
+                                expiry_time=expiry_time)
+
+# ===========================================
+# SERVER-SIDE: Attendance Validation
+# ===========================================
+class ValidateAttendance(graphene.Mutation):
+    class Arguments:
+        encrypted_payload = graphene.String(required=True)
+        student_id = graphene.String(required=True)
+
+    Output = graphene.JSONString
+
+    def mutate(self, info, encrypted_payload, student_id):
+        return validate_attendance(encrypted_payload, student_id)
 
 class Mutation(graphene.ObjectType):
     generate_qr_code = GenerateQRCode.Field()
+    validate_attendance = ValidateAttendance.Field()
 
 #schema_mutation = graphene.Schema(query=Query, mutation=Mutation)
+
