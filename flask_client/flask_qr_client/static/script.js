@@ -1,4 +1,18 @@
+function formatTimestamp(timestamp) {
+    if (!timestamp) return "N/A";  // Handle missing timestamp case
+    const date = new Date(timestamp * 1000);
+    return date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+}
 
+document.addEventListener("DOMContentLoaded", function () {
+    const expirySpan = document.getElementById("expiryTime");
+    const expiryTimestamp = parseInt(expirySpan.getAttribute("data-timestamp"), 10);
+    expirySpan.textContent = formatTimestamp(expiryTimestamp);
+});
+
+function reloadQRCode() {
+    location.reload(); // Simple way to refresh the page
+}
 
 async function fetchQRCode(instructorId, courseCode) {
     try {
@@ -28,7 +42,6 @@ function refreshQRCode() {
     location.reload(); // Simple refresh mechanism for now
 }
 
-
 // Ensure the function is only called when the instructor page is loaded
 document.addEventListener("DOMContentLoaded", () => {
     const instructorId = "INS123";  // Replace with dynamic values if necessary
@@ -43,11 +56,10 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
-    if (document.getElementById("qr-reader")) {
+    if (document.getElementById("start-scanner")) {
         document.getElementById("start-scanner").addEventListener("click", startScanner);
     }
 });
-
 
 function startScanner() {
     if (typeof Html5Qrcode === "undefined") {
@@ -59,7 +71,7 @@ function startScanner() {
 
     scanner.start(
         { facingMode: "environment" }, // Rear camera
-        { fps: 10, qrbox: { width: 250, height: 250 } },
+        { fps: 10, qrbox: 250 },
         (decodedText) => {
             console.log("Scanned QR Code:", decodedText);
             document.getElementById("scan-result").innerText = `Scanned: ${decodedText}`;
@@ -69,9 +81,10 @@ function startScanner() {
         (error) => {
             console.warn("Scanning error:", error);
         }
-    );
+    ).catch((err) => {
+        console.error("Error starting scanner:", err);
+    });
 }
-
 
 async function submitAttendance(scannedPayload) {
     try {
@@ -93,14 +106,12 @@ async function submitAttendance(scannedPayload) {
     }
 }
 
+// Initial fetch
 document.addEventListener("DOMContentLoaded", () => {
-    if (document.getElementById("qr-reader")) {
-        document.getElementById("start-scanner").addEventListener("click", startScanner);
-    }
+    const instructorId = "INS123"; // Replace dynamically if needed
+    const courseCode = "SEN312";   // Replace dynamically if needed
+    fetchQRCode(instructorId, courseCode);
 });
-
 
 // Initial fetch
 fetchQRCode();
-
-

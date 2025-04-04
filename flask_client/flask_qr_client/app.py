@@ -9,7 +9,7 @@ from flask_cors import CORS  # Import CORS
 
 app = Flask(__name__)
 
-CORS(app)  # Enable CORS globally
+#CORS(app)  # Enable CORS globally
 
 
 # Mock Database (In-memory storage for simplicity)
