@@ -1,14 +1,23 @@
+
 {% extends "base.html" %}
 
 {% block title %}Home - QR Attendance System{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h2>Welcome to the QR Attendance System</h2>
-    <p>Select your role to continue:</p>
-    <div class="role-buttons">
-        <a href="{{ url_for('instructor_page') }}" class="btn">Instructor</a>
-        <a href="{{ url_for('student_page') }}" class="btn">Student</a>
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow-lg bg-dark text-white p-5" style="max-width: 500px; width: 100%; border-radius: 1rem;">
+        <div class="card-body text-center">
+            <h2 class="card-title text-info mb-4">Welcome to QR Attendance System</h2>
+            <p class="text-muted mb-4">Please select your role to continue:</p>
+            <div class="d-grid gap-3">
+                <a href="{{ url_for('instructor_page') }}" class="btn btn-outline-info btn-lg">
+                    👨‍🏫 Instructor
+                </a>
+                <a href="{{ url_for('student_page') }}" class="btn btn-outline-success btn-lg">
+                    🎓 Student
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

@@ -28,6 +28,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <script>
+    const GRAPHQL_ENDPOINT = "http://:8091/graphql_mutation";
     function startScanner() {
         if (typeof Html5Qrcode === "undefined") {
             alert("QR Code scanner library not loaded. Please refresh the page.");
@@ -58,39 +59,33 @@
         });
     }
 
-    const GRAPHQL_ENDPOINT = "http://127.0.0.1:8091/graphql_mutation";
+    //const GRAPHQL_ENDPOINT = "http://127.0.0.1:8091/graphql_mutation";
 
     async function submitAttendance(scannedPayload) {
-    alert("Calling validateAttendance with: " + scannedPayload);
+    alert(`Calling validateAttendance with: ${scannedPayload}`);
     try {
         const graphqlQuery = {
             query: `
-                mutation ValidateAttendance($payload: String!, $studentId: String!) {
+                mutation {
                     validateAttendance(
-                        encryptedPayload: $payload,
-                        studentId: $studentId
-                    )
+                        encryptedPayload: """${scannedPayload}""", studentId: "STU456" )
                 }
-            `,
-            variables: {
-                payload: scannedPayload,
-                studentId: "STU456"
-            }
+            `
         };
-
+        alert("Here!")
         const response = await fetch(GRAPHQL_ENDPOINT, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(graphqlQuery),
         });
 
-        const raw = await response.text();
-        console.log("Raw GraphQL Response:", raw);
-
-        const result = JSON.parse(raw);
+        alert("HERE 2!");
+        const result = await response.json();
+        alert(result)
         const parsed = JSON.parse(result.data.validateAttendance);
+
+        //const result2 = await response.json();
+        //const qrData = result?.data?.generateQrCode;
 
         if (parsed.status === "SUCCESS") {
             alert("✅ Attendance recorded successfully!");
@@ -102,6 +97,7 @@
         alert("🚨 Error submitting attendance. Please try again.");
     }
 }
+
 
     // Initialize the scanner when the page is ready
     document.getElementById("start-scanner").addEventListener("click", startScanner);

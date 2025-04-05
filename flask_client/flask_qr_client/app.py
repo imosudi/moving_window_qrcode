@@ -95,7 +95,9 @@ def home():
 
 @app.route('/instructor')
 def instructor_page():
-    return render_template('instructor.html')
+    instructor_id   = 'INS123'
+    course_code     = 'SEN312'
+    return render_template('instructor.html', instructor_id=instructor_id, course_code=course_code)
 
 @app.route('/student')
 def student_page():

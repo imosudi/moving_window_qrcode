@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 
 {% block title %}Instructor - Generate QR Code{% endblock %}
@@ -11,13 +12,16 @@
 
             <!-- Horizontal Row for Instructor Info -->
             <div class="row text-start mb-4">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <p><strong>Instructor ID:</strong> <span id="instructorId">{{ instructor_id }}</span></p>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
+                    <p><strong>Course Code:</strong> <span id="courseCode">{{ course_code }}</span></p>
+                </div>
+                <div class="col-md-3">
                     <p><strong>Expires at:</strong> <span id="expiry-time" class="text-warning">Loading...</span></p>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <p><strong>Countdown:</strong> <span id="countdown" class="text-danger">--:--</span></p>
                 </div>
             </div>
@@ -125,3 +129,4 @@ function startCountdown() {
 fetchQRCode("INS123", "SEN312");
 </script>
 {% endblock %}
+
