@@ -16,7 +16,7 @@ app = Flask(__name__)
 instructor_qr_codes = {}
 
 # GraphQL Endpoint (Replace with your actual API URL)
-GRAPHQL_API_URL = "http://192.168.167.192:8091/graphql_mutation"
+GRAPHQL_API_URL = "http://192.168.55.192:8091/graphql_mutation"
 GRAPHQL_ENDPOINT = "http://127.0.0.1:8091/graphql_mutation"
 
 
@@ -100,6 +100,7 @@ def instructor_page():
 @app.route('/student')
 def student_page():
     return render_template('student.html')
+
 @app.route('/generate_qr', methods=['POST'])
 def generate_qr():
     data = request.json
@@ -122,7 +123,7 @@ def submit_attendance():
     data = request.json
     scanned_payload = data.get("scanned_payload")
     student_id = data.get("student_id")
-    
+    print("scanned_payload: ", scanned_payload, "\n", "student_id: ", student_id); time.sleep(300)
     try:
         response = requests.post(GRAPHQL_API_URL, json={
             "query": f"""
@@ -140,5 +141,6 @@ def submit_attendance():
         return jsonify({"status": "ERROR", "error_message": str(e)})
 
 
-if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5500)
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5500, ssl_context=('./ssl_cert/cert.pem', './ssl_cert/key.pem'))
+

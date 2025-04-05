@@ -1,6 +1,7 @@
 
 
 import os, json, hmac, hashlib, time
+import ast
 from flask import jsonify, request
 
 from app.models import Role, User, Attendance, Nonce, Course
@@ -44,9 +45,22 @@ def decrypt_hmac(encrypted_payload, original_payload, secret_key=SECRET_KEY):
 
 def validate_attendance(encrypted_payload, student_id):
     # 1. Assume student authentication is already verified by middleware.
+    print("\n\n", "validate_attendance funtion", "\n\n")
+    print(encrypted_payload, student_id)
+    encrypted_payload_andpayload = encrypted_payload
+    encrypted_payload = encrypted_payload_andpayload.split(" | ")[0]
+    print("encrypted_payload: ", encrypted_payload); #time.sleep(300)
+    
+    payload_str = encrypted_payload_andpayload.split(" | ")[1]
+    print("payload_str: ", payload_str, type(payload_str))
 
+    payload_dict  = ast.literal_eval(payload_str)
+    print("payload_dict: ", payload_dict, type(payload_dict))
     # 2. Decrypt or verify the encrypted payload.
-    payload = decrypt_hmac(encrypted_payload, SECRET_KEY)
+    print(encrypted_payload, "\n", SECRET_KEY); #time.sleep(300)
+    
+    payload = decrypt_hmac(encrypted_payload, payload_dict, SECRET_KEY)
+    print("payload: ", payload); #time.sleep(300)
     if payload is None:
         return {"status": "ERROR", "message": "Invalid or tampered QR code."}
 
@@ -62,6 +76,7 @@ def validate_attendance(encrypted_payload, student_id):
 
     # 5. Mark the nonce as used to block any replay.
     mark_nonce_as_used(payload["nonce"])
+    
 
     # 6. Record the attendance in the system.
     record_attendance(student_id, t_current, payload)
@@ -80,6 +95,7 @@ def is_nonce_used(nonce):
 
 def mark_nonce_as_used(nonce):
     new_nonce = Nonce(nonce=nonce, timestamp=get_current_server_time())
+    #new_nonce = Nonce(nonce=nonce, timestamp=get_current_server_time().isoformat())
     db.session.add(new_nonce)
     db.session.commit()
 

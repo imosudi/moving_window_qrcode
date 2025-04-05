@@ -36,11 +36,11 @@ class GenerateQRCode(graphene.Mutation):
             "window_start": window_start,
             "nonce": nonce
         }
-
+        print(payload, SECRET_KEY)
         enc_payload = hmac_sha256(payload, SECRET_KEY) + " | " + str(payload)
 
         # Mark nonce as used
-        mark_nonce_as_used(nonce)
+        #mark_nonce_as_used(nonce)
 
         # Log event
         log_event("QR Generation", payload, enc_payload, current_time)
@@ -71,6 +71,7 @@ class ValidateAttendance(graphene.Mutation):
     Output = graphene.JSONString
 
     def mutate(self, info, encrypted_payload, student_id):
+        print("validate_attendance Mutation")
         return validate_attendance(encrypted_payload, student_id)
 
 class Mutation(graphene.ObjectType):

@@ -44,8 +44,6 @@ class Role(db.Model) :      #, RoleMixin):
     def __repre__(self):
         return '<Role %r>' % self.name
         
-
-
 class User(db.Model) :              # UserMixin, db.Model):
     __tablename__ = 'user'
     id                  = db.Column(db.Integer, primary_key=True)
@@ -73,7 +71,6 @@ class User(db.Model) :              # UserMixin, db.Model):
                             backref=db.backref('users', lazy='dynamic')) 
     def __repr__(self):
         return '<User %r>' % self.email
-
 
 class Nonce(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)

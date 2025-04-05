@@ -3,17 +3,125 @@
 {% block title %}Instructor - Generate QR Code{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h2>Instructor QR Code Generator</h2>
-    <p>Share this QR code with your students for attendance.</p>
-    <div class="container d-flex justify-content-center align-items-center">
-        <div id="qr-container" class="card shadow p-4 text-center">
-            <p>Loading QR Code...</p>
+<div class="container mt-5">
+    <div class="card bg-dark text-white shadow-lg border-light p-4">
+        <div class="card-body">
+            <h3 class="card-title text-info mb-3">Instructor QR Code Generator</h3>
+            <p class="text-muted">Share this QR code with your students for attendance.</p>
+
+            <!-- Horizontal Row for Instructor Info -->
+            <div class="row text-start mb-4">
+                <div class="col-md-4">
+                    <p><strong>Instructor ID:</strong> <span id="instructorId">{{ instructor_id }}</span></p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Expires at:</strong> <span id="expiry-time" class="text-warning">Loading...</span></p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Countdown:</strong> <span id="countdown" class="text-danger">--:--</span></p>
+                </div>
+            </div>
+
+            <!-- QR Container -->
+            <div class="d-flex justify-content-center mb-4">
+                <div id="qr-container" class="p-3 border border-info rounded bg-body-secondary" style="min-height: 360px;">
+                    <p id="qr-status" class="text-muted">Loading QR Code...</p>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button class="btn" onclick="fetchQRCode('INS123', 'SEN312')">
+                    🔄 Refresh QR Code
+                </button>
+            </div>
         </div>
     </div>
-    
-    <p id="expiry-time"></p> <!-- Ensure this element exists -->
-
-    <button class="btn" onclick="fetchQRCode('INS123', 'SEN312')">Refresh QR Code</button>
 </div>
+
+<!-- ✅ QRCode.js for QR generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+const GRAPHQL_ENDPOINT = "http://127.0.0.1:8091/graphql_mutation";
+let expiryTimestamp = null;
+let countdownInterval = null;
+
+async function fetchQRCode(instructorId, courseCode) {
+    try {
+        const graphqlQuery = {
+            query: `
+                mutation {
+                    generateQrCode(courseCode: "${courseCode}", instructorId: "${instructorId}") {
+                        qrCodePayload
+                        expiryTime
+                    }
+                }
+            `
+        };
+
+        const response = await fetch(GRAPHQL_ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(graphqlQuery),
+        });
+
+        const result = await response.json();
+        const qrData = result?.data?.generateQrCode;
+
+        if (!qrData || !qrData.qrCodePayload) {
+            console.error("Invalid QR Code data:", result);
+            return;
+        }
+
+        expiryTimestamp = qrData.expiryTime;
+
+        // Update expiry display
+        document.getElementById("expiry-time").innerText =
+            new Date(expiryTimestamp * 1000).toLocaleTimeString();
+
+        // Start countdown
+        if (countdownInterval) clearInterval(countdownInterval);
+        startCountdown();
+
+        // Generate QR Code
+        const qrContainer = document.getElementById("qr-container");
+        qrContainer.innerHTML = "";  // Clear previous QR code
+
+        new QRCode(qrContainer, {
+            text: qrData.qrCodePayload,
+            width: 320,  // Larger QR code size
+            height: 320,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+    } catch (error) {
+        console.error("Error fetching QR Code:", error);
+    }
+}
+
+function startCountdown() {
+    const countdownEl = document.getElementById("countdown");
+
+    countdownInterval = setInterval(() => {
+        const now = Math.floor(Date.now() / 1000);
+        const remaining = expiryTimestamp - now;
+
+        if (remaining <= 0) {
+            countdownEl.innerText = "Expired";
+            clearInterval(countdownInterval);
+            setTimeout(() => fetchQRCode('INS123', 'SEN312'), 1000);  // Auto-refresh after expiry
+            return;
+        }
+
+        const minutes = String(Math.floor(remaining / 60)).padStart(2, "0");
+        const seconds = String(remaining % 60).padStart(2, "0");
+        countdownEl.innerText = `${minutes}:${seconds}`;
+    }, 1000);
+}
+
+// Initial QR fetch
+fetchQRCode("INS123", "SEN312");
+</script>
 {% endblock %}
