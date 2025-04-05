@@ -46,7 +46,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <script>
-const GRAPHQL_ENDPOINT = "http://127.0.0.1:8091/graphql_mutation";
+const GRAPHQL_ENDPOINT = "https://192.168.254.192:8091/graphql_mutation";
 let expiryTimestamp = null;
 let countdownInterval = null;
 
@@ -129,4 +129,3 @@ function startCountdown() {
 fetchQRCode("INS123", "SEN312");
 </script>
 {% endblock %}
-

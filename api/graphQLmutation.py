@@ -71,7 +71,7 @@ class ValidateAttendance(graphene.Mutation):
     Output = graphene.JSONString
 
     def mutate(self, info, encrypted_payload, student_id):
-        print("validate_attendance Mutation")
+        print("\n", "validate_attendance Mutation", "\n")
         return validate_attendance(encrypted_payload, student_id)
 
 class Mutation(graphene.ObjectType):

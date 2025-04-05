@@ -45,7 +45,7 @@ def decrypt_hmac(encrypted_payload, original_payload, secret_key=SECRET_KEY):
 
 def validate_attendance(encrypted_payload, student_id):
     # 1. Assume student authentication is already verified by middleware.
-    print("\n\n", "validate_attendance funtion", "\n\n")
+    print("\n\n", "validate_attendance function", "\n\n")
     print(encrypted_payload, student_id)
     encrypted_payload_andpayload = encrypted_payload
     encrypted_payload = encrypted_payload_andpayload.split(" | ")[0]
@@ -62,6 +62,7 @@ def validate_attendance(encrypted_payload, student_id):
     payload = decrypt_hmac(encrypted_payload, payload_dict, SECRET_KEY)
     print("payload: ", payload); #time.sleep(300)
     if payload is None:
+        print("\n\n", "Invalid or tampered QR code.")
         return {"status": "ERROR", "message": "Invalid or tampered QR code."}
 
     # 3. Check that the QR code is still within the valid moving window.
@@ -72,6 +73,7 @@ def validate_attendance(encrypted_payload, student_id):
 
     # 4. Prevent replay attacks by ensuring the nonce hasn't been used.
     if is_nonce_used(payload["nonce"]):
+        print("\n\n", "This QR code has already been used.")
         return {"status": "ERROR", "message": "This QR code has already been used."}
 
     # 5. Mark the nonce as used to block any replay.
@@ -87,8 +89,8 @@ def validate_attendance(encrypted_payload, student_id):
         "payload": payload,
         "timestamp": t_current
     })
-
-    return {"status": "SUCCESS", "message": "Attendance recorded."}
+    print("\n\n", "Attendance recorded.")
+    return {"status": "SUCCESS", "course_code": payload["course_code"], "message": "Attendance recorded."}
 
 def is_nonce_used(nonce):
     return db.session.query(Nonce).filter_by(nonce=nonce).first() is not None

@@ -28,7 +28,8 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <script>
-    const GRAPHQL_ENDPOINT = "http://:8091/graphql_mutation";
+    const GRAPHQL_ENDPOINT = "https://192.168.254.192:8091/graphql_mutation";
+    const studentId = "STU456"
     function startScanner() {
         if (typeof Html5Qrcode === "undefined") {
             alert("QR Code scanner library not loaded. Please refresh the page.");
@@ -47,8 +48,40 @@
                 //alert("Scanned QR Code:");
                 //alert(decodedText);
                 document.getElementById("scan-result").innerText = `Scanned: ${decodedText}`;
-                await scanner.stop(); // Make sure scanning stops first
-                submitAttendance(decodedText); // Then submit the payload
+                await scanner.stop(); // Stop the scanner before submitting
+                const resultDiv = document.getElementById("scan-result");
+                resultDiv.className = "text-center mt-4 text-info";
+                resultDiv.innerText = "⏳ Submitting attendance...";
+
+                try {
+                    const response = await submitAttendance2(decodedText, studentId);
+                    
+                    if (response?.data?.validateAttendance) {
+                        let parsed = {};
+                        try {
+                            //parsed = JSON.parse(response.data.validateAttendance);
+                            parsed = response.data.validateAttendance;
+                            console.log(response.data.validateAttendance["status"]); //SUCCESS | ERROR
+                            console.log(parsed["status"])
+                            console.log(response.data.validateAttendance["message"]);
+                            console.log(parsed["message"])
+                        } catch (e) {
+                            parsed = { status: "ERROR", message: "Invalid server response." };
+                        }
+                        console.log(parsed);
+                        if (parsed.status === "SUCCESS") {
+                            resultDiv.className = "text-center mt-4 text-success";
+                            resultDiv.innerText = `✅ ${parsed.course_code}:  ${parsed.message}`;
+                        } else {
+                            resultDiv.className = "text-center mt-4 text-danger";
+                            resultDiv.innerText = `❌ ${parsed.course_code}:  ${parsed.message}`;
+                        }
+                    }
+                } catch (error) {
+                    const resultDiv = document.getElementById("scan-result");
+                    resultDiv.className = "text-center mt-4 text-danger";
+                    resultDiv.innerText = "🚨 Error submitting attendance. Please try again.";
+                }
             },
             (error) => {
                 console.warn("Scanning error:", error);
@@ -61,45 +94,110 @@
 
     //const GRAPHQL_ENDPOINT = "http://127.0.0.1:8091/graphql_mutation";
 
-    async function submitAttendance(scannedPayload) {
-    alert(`Calling validateAttendance with: ${scannedPayload}`);
-    try {
+    async function submitAttendance2(encryptedPayload, studentId) {
+        const GRAPHQL_ENDPOINT = "https://192.168.254.192:8091/graphql_mutation";
+        //alert(studentId);
+        // Construct the GraphQL mutation
         const graphqlQuery = {
             query: `
-                mutation {
-                    validateAttendance(
-                        encryptedPayload: """${scannedPayload}""", studentId: "STU456" )
-                }
-            `
+            mutation validateAttendance($payload: String!, $id: String!) {
+                validateAttendance(
+                encryptedPayload: $payload
+                studentId: $id
+                )
+            }
+            `,
+            variables: {
+                payload: encryptedPayload,
+                id: studentId
+            }
         };
-        alert("Here!")
-        const response = await fetch(GRAPHQL_ENDPOINT, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(graphqlQuery),
-        });
+        try {
+            // Send the POST request to the GraphQL endpoint
+            const response = await fetch(GRAPHQL_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(graphqlQuery)
+            });
 
-        alert("HERE 2!");
-        const result = await response.json();
-        alert(result)
-        const parsed = JSON.parse(result.data.validateAttendance);
+            //alert(response);
+            if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+            //alert(response.status)
+            }
 
-        //const result2 = await response.json();
-        //const qrData = result?.data?.generateQrCode;
+            const data = await response.json();
+            // Parse the JSON string returned in validateAttendance
+            if (data.data && data.data.validateAttendance) {
+                console.log(data.data.validateAttendance); // {"status": "SUCCESS", "message": "Attendance recorded."} | {"status": "ERROR", "message": "This QR code has already been used."}
+            try {
+                data.data.validateAttendance = JSON.parse(data.data.validateAttendance);
+                console.log(data.data.validateAttendance["status"]); //SUCCESS | ERROR
 
-        if (parsed.status === "SUCCESS") {
-            alert("✅ Attendance recorded successfully!");
-        } else {
-            alert("❌ Attendance error: " + parsed.message);
+                console.log(data.data.validateAttendance["message"]); //Attendance recorded.| This QR code has already been used.
+            } catch (e) {
+                console.warn("Could not parse validateAttendance response as JSON");
+            }
+            }
+            
+            return data;
+        } catch (error) {
+            console.error("Error submitting attendance:", error);
+            //alert("Error submitting attendance:", error);
+            throw error;
         }
-    } catch (error) {
-        console.error("Error submitting attendance:", error);
-        alert("🚨 Error submitting attendance. Please try again.");
     }
-}
+
+    async function submitAttendance(scannedPayload, studentId) {
+        //alert(`Calling validateAttendance with: ${scannedPayload}`);
+        alert(`Here! + ${scannedPayload} + ${studentId}`);
+        const parts = scannedPayload.split(" | ");
+
+        const hash = parts[0];
+        const metadata = parts[1];
+
+        try {
+            const graphqlQuery = {
+                query: `
+                    mutation {
+                        validateAttendance(
+                            encryptedPayload: "${hash}", studentId: "${studentId}" )
+                    }
+                `
+            };
+            
+            alert(`Here 2! + ${hash} + ${studentId}`);
+            const response = await fetch(GRAPHQL_ENDPOINT, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(graphqlQuery),
+            });
+
+            alert("HERE 3!");
+            const result = await response.json();
+            alert(result)
+            const parsed = JSON.parse(result.data.validateAttendance);
+
+            //const result2 = await response.json();
+            //const qrData = result?.data?.generateQrCode;
+
+            if (parsed.status === "SUCCESS") {
+                alert("✅ Attendance recorded successfully!");
+            } else {
+                alert("❌ Attendance error: " + parsed.message);
+            }
+        } catch (error) {
+            console.error("Error submitting attendance:", error);
+            alert("🚨 Error submitting attendance. Please try again.");
+        }
+    }
 
 
     // Initialize the scanner when the page is ready
     document.getElementById("start-scanner").addEventListener("click", startScanner);
 </script>
 {% endblock %}
+
