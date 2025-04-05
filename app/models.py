@@ -94,7 +94,7 @@ class Course(db.Model):
     instructor_id = db.Column(db.String(50), nullable=False)
     course_code = db.Column(db.String(20), unique=True, nullable=False)
     course_level = db.Column(db.String(10), nullable=False)
-    course_code = db.Column(db.String(500), nullable=False)
+    course_title = db.Column(db.String(500), nullable=False)
     lecture_start = db.Column(db.DateTime, nullable=False)
     lecture_end = db.Column(db.DateTime, nullable=False)
 
