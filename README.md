@@ -54,8 +54,7 @@ This modern approach to attendance management combines security with convenience
 
  cd moving_window_qrcode/    
 
-
-# Create app/.env file
+ Create app/.env file
  touch app/.env     
 Edit app/.env   
 Add :
@@ -68,29 +67,29 @@ DB_PASS="PASS****WORD"
 
 DB_NAME="graphqldb"
 
-# Consider editing config.py    
+## Consider editing config.py    
  config,py
 
-# Review and edit:  
+## Review and edit:  
  models.py vis-a-vis graphQLquery.py    
  app/models.py  
  app/graphQLquery.py     
 
 
-# Create Python3 virtual environment    
+## Create Python3 virtual environment    
  python3.9 -m venv venv
 
-# Start virtual environment     
+## Start virtual environment     
  source venv/bin/activate   
 
 
-# Flask-Migrate 
+## Flask-Migrate 
 Run:    
  flask db init   
  flask db migrate   
  flask db upgrade   
 
-# Run       
+## Run       
  python main.py     
 
 
