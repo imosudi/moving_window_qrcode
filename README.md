@@ -1,4 +1,4 @@
-# Moving Window QR Code graphql
+# Moving Window QR Code-based attendance system
 
 # Clone repo    
  git clone https://github.com/imosudi/moving_window_qrcode.git   
